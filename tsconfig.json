@@ -5,7 +5,7 @@
         "lib": [
             "ESNext"
         ],
-        "rootDir": "./src",
+        "rootDir": ".",
         "outDir": "./dist",
         "strict": false,
         "esModuleInterop": true,
@@ -14,9 +14,11 @@
         "moduleResolution": "node"
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "api/**/*"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "dist"
     ]
 }

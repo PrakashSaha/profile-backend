@@ -5,8 +5,9 @@ import compression from 'compression'
 import rateLimit from 'express-rate-limit'
 import { config } from './config/env.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
-import cmsRoutes from './routes/cms.routes.js'
-import adminRoutes from './routes/admin.routes.js'
+import cmsRoutes from './routes/cms.js'
+import adminRoutes from './routes/admin.js'
+import healthRoutes from './routes/health.js'
 import { sendResponse } from './utils/apiResponse.js'
 
 const app = express()
@@ -76,6 +77,18 @@ const authLimiter = rateLimit({
 app.use(globalLimiter)
 app.use('/api/admin/login', authLimiter)
 
+// ─── Root Route ───────────────────────────────────────────────────────────────
+// Handles GET / for the vercel.json root route entry.
+// Returns a human-friendly confirmation that the API server is running.
+app.get('/', (_req, res) => {
+    res.json({
+        success: true,
+        message: 'API Server Running',
+        version: '1.0.0',
+        docs: '/api/health',
+    })
+})
+
 // ─── Structured Request Logging ───────────────────────────────────────────────
 app.use((req, res, next) => {
     const start = Date.now()
@@ -100,13 +113,7 @@ app.use('/api/cms', cmsRoutes)
 app.use('/api/admin', adminRoutes)
 
 // Health check — useful for Vercel deploy checks and uptime monitors
-app.get('/api/health', async (_req, res) => {
-    return sendResponse(res, {
-        status: 'ok',
-        env: config.NODE_ENV,
-        timestamp: new Date().toISOString(),
-    })
-})
+app.use('/api/health', healthRoutes)
 
 // ─── 404 & Error Handlers ─────────────────────────────────────────────────────
 // IMPORTANT: notFoundHandler MUST be registered AFTER all routes.
