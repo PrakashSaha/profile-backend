@@ -1,0 +1,131 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  password String
+  name     String?
+}
+
+model Hero {
+  id        String @id @default("hero")
+  name      String
+  role      String
+  bio       String
+  company   String
+  location  String
+  image     String
+  logoLink  String   @default("/")
+  socials   Json?
+}
+
+model ToolCategory {
+  id     String  @id @default(cuid())
+  name   String
+  icon   String
+  tools  Tool[]
+  pinned Boolean @default(false)
+}
+
+model Tool {
+  id         String @id @default(cuid())
+  name       String
+  categoryId String
+  category   ToolCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  description     String
+  fullDescription String?
+  image           String
+  icon            String
+  type            String
+  tech            Json
+  stars           Int      @default(0)
+  forks           Int      @default(0)
+  watchers        Int      @default(0)
+  updatedAt       String
+  link            String?
+  pinned          Boolean  @default(false)
+}
+
+model BlogPost {
+  id         String   @id @default(cuid())
+  title      String
+  slug       String   @unique
+  excerpt    String
+  content    String
+  image      String
+  date       String
+  readTime   String
+  tags       Json
+  author     String
+  authorRole String
+  pinned     Boolean  @default(false)
+}
+
+model Experience {
+  id       String   @id @default(cuid())
+  title    String
+  company  String
+  location String
+  period   String
+  type     String
+  points   Json
+  pinned   Boolean  @default(false)
+}
+
+model Education {
+  id         String  @id @default(cuid())
+  university String
+  degree     String
+  period     String
+  location   String
+  pinned     Boolean @default(false)
+}
+
+model Credential {
+  id          String  @id @default(cuid())
+  label       String
+  link        String
+  issuer      String
+  date        String
+  type        String
+  description String?
+  pinned      Boolean @default(false)
+}
+
+model Bento {
+  id      String @id @default("bento")
+  content Json
+}
+
+model EngineeringStep {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String
+  details     Json     // Array of strings
+  order       Int      @default(0)
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+  read      Boolean  @default(false)
+}
