@@ -28,7 +28,7 @@ const envSchema = z.object({
 
     FRONTEND_URL: z.string().default('http://localhost:3000'),
     PORT: z.string().default('5001'),
-    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('production'),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 })
 

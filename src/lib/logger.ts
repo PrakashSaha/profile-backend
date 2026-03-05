@@ -11,10 +11,14 @@ import { config } from '../config/env.js';
  * 3. Standardized: Provides levels (fatal, error, warn, info, debug, trace).
  */
 
+// Detect Vercel runtime: worker threads (pino-pretty transport) crash on Vercel serverless
+const isVercel = Boolean(process.env.VERCEL)
+const isDev = config.NODE_ENV === 'development' && !isVercel
+
 const logger = pino({
     level: config.LOG_LEVEL || 'info',
-    // In development, use pino-pretty for human-readable console output
-    transport: config.NODE_ENV === 'development' ? {
+    // Only use pino-pretty locally — it spawns a worker thread which Vercel doesn't support
+    transport: isDev ? {
         target: 'pino-pretty',
         options: {
             colorize: true,
