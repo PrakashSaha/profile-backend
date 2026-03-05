@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { Prisma } from '@prisma/client'
 import { config } from '../config/env.js'
+import logger from '../lib/logger.js'
 
 // ─── Error Type Constants ─────────────────────────────────────────────────────
 export const ErrorType = {
@@ -190,10 +191,11 @@ export const errorHandler = (
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _next: NextFunction
 ) => {
-    // Always log server-side (full error including stack)
-    console.error(`[ERROR] ${req.method} ${req.originalUrl}`, {
+    // Always log server-side (full error including stack) using structured logger
+    logger.error({
+        msg: `${req.method} ${req.originalUrl}`,
         errorType: err?.errorType,
-        message: err?.message,
+        errorMsg: err?.message,
         code: err?.code,
         stack: err?.stack,
     })

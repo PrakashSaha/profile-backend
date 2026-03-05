@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { config } from '../config/env.js'
 import { sendResponse } from '../utils/apiResponse.js'
-import { checkDatabaseConnection } from '../lib/prisma.js'
+import { checkPoolStatus } from '../lib/db/connection.js'
 
 const router = Router()
 
@@ -10,16 +10,17 @@ const router = Router()
  * Comprehensive health check for Vercel serverless and DB connectivity.
  */
 router.get('/', async (_req, res) => {
-    const dbStatus = await checkDatabaseConnection()
+    // Uses the new pooled connection with retry logic
+    const dbStatus = await checkPoolStatus()
 
     return sendResponse(res, {
-        status: 'ok',
-        database: dbStatus.connected ? 'connected' : 'disconnected',
+        status: dbStatus.ok ? 'ok' : 'error',
+        database: dbStatus.ok ? 'connected' : 'disconnected',
         dbError: dbStatus.error ?? null,
         env: config.NODE_ENV,
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-    }, dbStatus.connected ? 'Service is healthy' : 'Service is degraded')
+    }, dbStatus.ok ? 'Service is healthy' : 'Service is degraded')
 })
 
 export default router

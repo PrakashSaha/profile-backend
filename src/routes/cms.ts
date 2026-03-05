@@ -38,8 +38,8 @@ router.get('/homepage', publicCacheHeaders, async (_req, res) => {
             toolsService.getAll(),
             experienceService.getAll(),   // returns { experiences, education }
             credentialsService.getAll(),
-            projectService.getAll(),
-            blogService.getAll(),
+            projectService.getHome(),
+            blogService.getHome(),
             processService.getAll(),
         ])
         return sendResponse(res, { hero, bento, tools, career, credentials, projects, blog, process })

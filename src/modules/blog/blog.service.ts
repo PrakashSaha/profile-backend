@@ -1,38 +1,52 @@
-import prisma from '../../lib/prisma.js'
+import { blogRepository } from './blog.repository.js'
 import { CreateBlogPostInput } from './blog.types.js'
+import prisma from '../../lib/prisma.js'
 
+/**
+ * 🏗️ Blog Service
+ * 
+ * Responsibilities:
+ * - Orchestrating blog-related business logic.
+ * - Coordination of repository calls and complex CRUD operations.
+ */
 export const blogService = {
     async getAll() {
-        return prisma.blogPost.findMany({
-            orderBy: { date: 'desc' }
-        })
+        return blogRepository.findAll()
+    },
+
+    async getHome() {
+        // Business Rule: Fetch up to 2 pinned first, fill with latest non-pinned
+        const pinned = await blogRepository.findPinned(2)
+
+        if (pinned.length >= 2) return pinned
+
+        const latest = await blogRepository.findLatestNonPinned(
+            pinned.map(p => p.id),
+            2 - pinned.length
+        )
+
+        return [...pinned, ...latest]
     },
 
     async getBySlug(slug: string) {
-        return prisma.blogPost.findUnique({
-            where: { slug }
-        })
+        return blogRepository.findBySlug(slug)
     },
 
     async create(data: CreateBlogPostInput) {
-        return prisma.blogPost.create({
-            data
-        })
+        return blogRepository.create(data)
     },
 
     async update(id: string, data: Partial<CreateBlogPostInput>) {
-        return prisma.blogPost.update({
-            where: { id },
-            data
-        })
+        return blogRepository.update(id, data)
     },
 
     async delete(id: string) {
-        return prisma.blogPost.delete({
-            where: { id }
-        })
+        return blogRepository.delete(id)
     },
 
+    /**
+     * Synchronizes blog posts with the database.
+     */
     async bulkSync(posts: any[]) {
         return prisma.$transaction(async (tx) => {
             const incomingIds: string[] = []
@@ -54,9 +68,7 @@ export const blogService = {
                 }
             }
 
-            await tx.blogPost.deleteMany({
-                where: { id: { notIn: incomingIds } }
-            })
+            await blogRepository.deleteNotInIds(incomingIds, tx)
 
             return tx.blogPost.findMany({ orderBy: { date: 'desc' } })
         }, { timeout: 30000 })

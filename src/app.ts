@@ -3,18 +3,40 @@ import cors from 'cors'
 import helmet from 'helmet'
 import compression from 'compression'
 import rateLimit from 'express-rate-limit'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { pinoHttp } from 'pino-http'
+import logger from './lib/logger.js'
+
 import { config } from './config/env.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import cmsRoutes from './routes/cms.js'
 import adminRoutes from './routes/admin.js'
 import healthRoutes from './routes/health.js'
-import { sendResponse } from './utils/apiResponse.js'
 
 const app = express()
 
-// ─── Security Headers ─────────────────────────────────────────────────────────
+// ─── Logging Middleware ──────────────────────────────────────────────────────
+// Standardized JSON request logs for production observability.
+app.use(pinoHttp({
+    logger,
+    // Add request ID headers for easier trace analysis
+    genReqId: (req) => req.headers['x-request-id'] || Math.random().toString(36).substring(7),
+}))
+
+// ─── Security Middleware ──────────────────────────────────────────────────────
 app.use(helmet({
-    // Content-Security-Policy can be customised later; start with defaults
+    // Content-Security-Policy: restrict where scripts/styles can be loaded from
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://vercel.live"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https://api.microlink.io"],
+            connectSrc: ["'self'", "https://api.microlink.io", "https://*.neon.tech"],
+        },
+    },
     crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow CDN-served assets
 }))
 
@@ -89,20 +111,6 @@ app.get('/', (_req, res) => {
     })
 })
 
-// ─── Structured Request Logging ───────────────────────────────────────────────
-app.use((req, res, next) => {
-    const start = Date.now()
-    res.on('finish', () => {
-        const duration = Date.now() - start
-        const level = res.statusCode >= 500 ? 'ERROR' : res.statusCode >= 400 ? 'WARN' : 'INFO'
-        console.log(
-            `[${level}] ${req.method} ${req.originalUrl} → ${res.statusCode} (${duration}ms)` +
-            (req.ip ? ` | ip=${req.ip}` : '')
-        )
-    })
-    next()
-})
-
 // ─── Routes ───────────────────────────────────────────────────────────────────
 // All routes are mounted under /api to match vercel.json routing and avoid 404s.
 
@@ -131,6 +139,14 @@ process.on('unhandledRejection', (reason: any) => {
 process.on('uncaughtException', (error: Error) => {
     console.error('[FATAL] Uncaught Exception:', error.message, error.stack)
     // In serverless, Vercel will restart the function if needed.
+})
+
+// Log basic startup info
+logger.info({
+    msg: 'Backend initialized',
+    port: config.PORT,
+    env: config.NODE_ENV,
+    db: 'Neon (Pooled Connection)',
 })
 
 export default app
