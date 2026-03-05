@@ -21,7 +21,11 @@ const app = express()
 app.use(pinoHttp({
     logger,
     // Add request ID headers for easier trace analysis
-    genReqId: (req) => req.headers['x-request-id'] || Math.random().toString(36).substring(7),
+    genReqId: (req) => {
+        const id = req.headers['x-request-id']
+        if (Array.isArray(id)) return id[0] ?? Math.random().toString(36).substring(7)
+        return id ?? Math.random().toString(36).substring(7)
+    },
 }))
 
 // ─── Security Middleware ──────────────────────────────────────────────────────

@@ -39,10 +39,14 @@ if (!parseResult.success) {
     const errors = parseResult.error.issues.map(
         (issue) => `  • ${String(issue.path[0] ?? 'unknown')}: ${issue.message}`
     )
-    console.error('\n🚨 [ENV] Application startup aborted — environment misconfiguration:\n')
-    console.error(errors.join('\n'))
-    console.error('\n📖 See .env.example for required variables.\n')
-    process.exit(1)
+    const message = [
+        '\n🚨 [ENV] Environment misconfiguration:\n',
+        errors.join('\n'),
+        '\n📖 See .env.example for required variables.\n',
+    ].join('')
+    console.error(message)
+    // Throw instead of process.exit() — exit() crashes Vercel serverless functions permanently.
+    throw new Error(`Environment misconfiguration:\n${errors.join('\n')}`)
 }
 
 export const config = parseResult.data
