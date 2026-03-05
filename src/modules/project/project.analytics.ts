@@ -1,4 +1,4 @@
-import { query } from '../lib/db/connection.js';
+import { query } from '../../lib/db/connection.js';
 
 /**
  * Example Service Layer using the Pooled Connection

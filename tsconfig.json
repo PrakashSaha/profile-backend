@@ -1,17 +1,24 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "module": "ESNext",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
         "lib": [
             "ESNext"
         ],
         "rootDir": ".",
         "outDir": "./dist",
-        "strict": false,
+        "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "resolveJsonModule": true,
-        "moduleResolution": "node"
+        "baseUrl": ".",
+        "paths": {
+            "*": [
+                "node_modules/*",
+                "src/*"
+            ]
+        }
     },
     "include": [
         "src/**/*",

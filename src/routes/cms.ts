@@ -8,15 +8,7 @@ import { processController } from '../modules/process/process.controller.js'
 import { messagesController } from '../modules/messages/messages.controller.js'
 import { bentoController } from '../modules/bento/bento.controller.js'
 import { credentialsController } from '../modules/credentials/credentials.controller.js'
-import { blogService } from '../modules/blog/blog.service.js'
-import { projectService } from '../modules/project/project.service.js'
-import { heroService } from '../modules/hero/hero.service.js'
-import { toolsService } from '../modules/tools/tools.service.js'
-import { experienceService } from '../modules/experience/experience.service.js'
-import { processService } from '../modules/process/process.service.js'
-import { bentoService } from '../modules/bento/bento.service.js'
-import { credentialsService } from '../modules/credentials/credentials.service.js'
-import { sendResponse, sendError } from '../utils/apiResponse.js'
+import { cmsController } from '../modules/cms/cms.controller.js'
 
 const router = Router()
 
@@ -30,23 +22,7 @@ const publicCacheHeaders = (_req: any, res: any, next: any) => {
 // ─── Homepage batch endpoint ─────────────────────────────────────────────────
 // Single request replaces 7 parallel client-side fetches.
 // Used by the homepage Server Component for ISR pre-fetching.
-router.get('/homepage', publicCacheHeaders, async (_req, res) => {
-    try {
-        const [hero, bento, tools, career, credentials, projects, blog, process] = await Promise.all([
-            heroService.get(),
-            bentoService.get(),
-            toolsService.getAll(),
-            experienceService.getAll(),   // returns { experiences, education }
-            credentialsService.getAll(),
-            projectService.getHome(),
-            blogService.getHome(),
-            processService.getAll(),
-        ])
-        return sendResponse(res, { hero, bento, tools, career, credentials, projects, blog, process })
-    } catch (error: any) {
-        return sendError(res, error.message)
-    }
-})
+router.get('/homepage', publicCacheHeaders, cmsController.getHomepage)
 
 // ─── Public Read-Only CMS Routes ─────────────────────────────────────────────
 router.get('/blogs', publicCacheHeaders, blogController.getPosts)
@@ -64,15 +40,7 @@ router.get('/bento', publicCacheHeaders, bentoController.getBento)
 router.get('/credentials', publicCacheHeaders, credentialsController.getCredentials)
 
 // ─── Aggregate route for Admin Dashboard ─────────────────────────────────────
-router.get('/posts', async (req, res) => {
-    try {
-        const blog = await blogService.getAll()
-        const projects = await projectService.getAll()
-        return sendResponse(res, { blog, projects })
-    } catch (error: any) {
-        return sendError(res, error.message)
-    }
-})
+router.get('/posts', cmsController.getAdminPosts)
 
 // ─── Public Messaging ─────────────────────────────────────────────────────────
 router.post('/messages', messagesController.createMessage)

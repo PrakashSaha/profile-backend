@@ -9,8 +9,7 @@ import { messagesController } from '../modules/messages/messages.controller.js'
 import { authController } from '../modules/auth/auth.controller.js'
 import { bentoController } from '../modules/bento/bento.controller.js'
 import { credentialsController } from '../modules/credentials/credentials.controller.js'
-import { blogService } from '../modules/blog/blog.service.js'
-import { projectService } from '../modules/project/project.service.js'
+import { cmsController } from '../modules/cms/cms.controller.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
 import { sendResponse, sendError } from '../utils/apiResponse.js'
 import { validate } from '../middleware/validate.js'
@@ -35,17 +34,7 @@ router.put('/blogs', blogController.bulkSyncPosts)
 router.put('/blogs/sync', blogController.bulkSyncPosts)
 
 // Posts Aggregate (Alias used by dashboard)
-router.put('/posts', async (req, res) => {
-    try {
-        const { blog, projects } = req.body
-        const results: any = {}
-        if (blog) results.blog = await blogService.bulkSync(blog)
-        if (projects) results.projects = await projectService.bulkSync(projects)
-        return sendResponse(res, results, 'Posts synchronized successfully')
-    } catch (error: any) {
-        return sendError(res, error.message)
-    }
-})
+router.put('/posts', cmsController.syncAdminPosts)
 
 // Projects
 router.post('/projects', validate(projectSchema), projectController.createProject)

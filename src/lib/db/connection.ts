@@ -18,8 +18,6 @@ const { Pool } = pg;
  */
 
 // Use local variable for singleton to support hot-reloading/process reuse in development
-let pool: pg.Pool;
-
 const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
@@ -37,7 +35,7 @@ if (!globalThis.pool) {
     });
 }
 
-pool = globalThis.pool;
+const pool = globalThis.pool;
 
 /**
  * Reusable Query Function with Automatic Retry Logic
